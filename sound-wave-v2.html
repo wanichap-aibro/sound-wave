@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>คลื่นเสียง (v2) | อากาศและการกระจัด</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#f4f4f5; --surface:#fff; --ink:#424344; --ink2:#535456; --mut:#68696b; --line:#d0d1d2; --field:#929497; --btn-border:#babcbd; --axis:#a6a7aa; --zero:#d0d1d2; --ind:#0080ff; --ind-d:#0055a4; --step-bg:#e6f2ff; --step-border:#91c8ff; --track:#c2e1ff; --wave:#0080ff; --ampl:#2e97ff; --ampl-t:#0055a4; --err:#d61f1f; --err-bg:#ffe6e6; --err-border:#ff0000; --info-bg:#e6f2ff; --info-border:#91c8ff; --info-fg:#0055a4; --physics: #f5891f; --physics-l: #fdead6; --pad: 20px; color-scheme: light; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#001c38; --surface:#003a73; --ink:#f4f4f5; --ink2:#e5e5e6; --mut:#babcbd; --line:#68696b; --field:#a6a7aa; --btn-border:#68696b; --axis:#929497; --zero:#535456; --ind:#2e97ff; --ind-d:#c2e1ff; --step-bg:#004991; --step-border:#2e97ff; --track:#004991; --wave:#5eafff; --ampl:#5eafff; --ampl-t:#91c8ff; --err:#ff8a8a; --err-bg:#6b0000; --err-border:#ff5454; --info-bg:#004991; --info-border:#2e97ff; --info-fg:#e6f2ff; color-scheme: dark; } }
+  :root[data-theme="dark"] { --bg:#001c38; --surface:#003a73; --ink:#f4f4f5; --ink2:#e5e5e6; --mut:#babcbd; --line:#68696b; --field:#a6a7aa; --btn-border:#68696b; --axis:#929497; --zero:#535456; --ind:#2e97ff; --ind-d:#c2e1ff; --step-bg:#004991; --step-border:#2e97ff; --track:#004991; --wave:#5eafff; --ampl:#5eafff; --ampl-t:#91c8ff; --err:#ff8a8a; --err-bg:#6b0000; --err-border:#ff5454; --info-bg:#004991; --info-border:#2e97ff; --info-fg:#e6f2ff; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: var(--pad); background: var(--bg); color: var(--ink); font-family: "Noto Sans Thai", "Sarabun", Tahoma, Arial, sans-serif; font-size: 16px; -webkit-text-size-adjust: 100%; }
+  .container { max-width: 760px; margin: auto; }
+  h1, h2, h3, p { margin-top: 0; }
+  h1 { font-size: clamp(24px, 4vw, 32px); margin-bottom: 6px; }
+  .subject-tag { display: inline-flex; align-items: center; gap: 8px; padding: 5px 14px 5px 10px; background: var(--physics-l); border: 1px solid var(--physics); border-radius: 99px; font-size: 14px; font-weight: 700; color: #424344; }
+  .subject-tag::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--physics); }
+  .subtitle { color: var(--mut); line-height: 1.65; margin-bottom: 14px; }
+  .card, .metric { background: var(--surface); border: 1px solid var(--line); }
+  .card { padding: 20px; border-radius: 20px; box-shadow: 0 1px 3px rgba(66,67,68,.05); }
+  .card-title { font-size: 17px; margin: 0 0 14px; padding-left: 10px; border-left: 4px solid var(--physics); }
+  .card-title:not(:first-child) { margin-top: 22px; padding-top: 18px; border-top: 1px dashed var(--btn-border); }
+
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-items: start; }
+  .col-main, .col-side { display: contents; }
+  .visual-section { order: 1; } #rangeWarn { order: 2; } .controls { order: 3; } .info { order: 4; } .formula { order: 5; }
+
+  .control-group { margin-bottom: 18px; }
+  .control-group:last-child { margin-bottom: 0; }
+  .control-header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+  .control-header label { font-weight: 600; }
+  .control-header strong { color: var(--ind-d); white-space: nowrap; font-size: 18px; }
+  input[type=number], select { width: 100%; min-height: 48px; padding: 10px 12px; border: 1px solid var(--field); border-radius: 12px; color: var(--ink); background: var(--surface); font: inherit; font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  input[type=number]:focus-visible, select:focus-visible, button:focus-visible, input[type=range]:focus-visible { outline: 3px solid var(--ind); outline-offset: 2px; border-color: var(--ind); }
+  input[type=number] { -moz-appearance: textfield; appearance: textfield; }
+  input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  input[type=number].invalid { border-color: var(--err-border); background: var(--err-bg); }
+  .num-row { display: flex; gap: 8px; }
+  .num-row input { flex: 1; min-width: 0; text-align: center; }
+  button.step { flex: 0 0 48px; min-height: 48px; padding: 0; font-size: 24px; line-height: 1; border-radius: 12px; background: var(--step-bg); border-color: var(--step-border); color: var(--ind-d); }
+  input[type=range] { -webkit-appearance: none; appearance: none; display: block; width: 100%; height: 36px; margin: 6px 0 0; background: transparent; cursor: pointer; }
+  input[type=range]::-webkit-slider-runnable-track { height: 8px; border-radius: 99px; background: linear-gradient(to right, var(--physics) var(--val, 60%), var(--zero) var(--val, 60%)); }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 28px; height: 28px; margin-top: -10px; border-radius: 50%; background: var(--physics); border: 3px solid #fff; box-shadow: 0 1px 5px rgba(66,67,68,.4); }
+  input[type=range]::-moz-range-track { height: 8px; border-radius: 99px; background: var(--zero); }
+  input[type=range]::-moz-range-progress { height: 8px; border-radius: 99px; background: var(--physics); }
+  input[type=range]::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: var(--physics); border: 3px solid #fff; box-shadow: 0 1px 5px rgba(66,67,68,.4); }
+  .range-label { display: flex; justify-content: space-between; font-size: 13px; color: var(--mut); margin-top: 2px; }
+  .input-hint { display: block; min-height: 17px; margin-top: 6px; color: var(--mut); font-size: 12.5px; line-height: 1.5; }
+  .input-hint.error { color: var(--err); }
+  .input-hint:empty { display: none; }
+  button { border: 1px solid var(--btn-border); border-radius: 12px; background: var(--surface); padding: 10px 14px; min-height: 44px; cursor: pointer; font: inherit; font-size: 15px; font-weight: 600; color: var(--ink); }
+  button.primary { background: #006dd9; color: #fff; border-color: #006dd9; }
+  .chips, .presets { display: flex; flex-wrap: wrap; gap: 8px; }
+  .presets { margin-top: 4px; }
+  button.chip { flex: 0 1 auto; min-width: 120px; padding: 9px 12px; color: var(--ink2); }
+  button.chip.small { min-width: 0; min-height: 38px; padding: 6px 12px; font-size: 14px; }
+  button.chip.active { background: var(--ind); border-color: var(--ind); color: #fff; }
+
+  .metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .metric, .formula { color: #424344; }
+  .metric { padding: 14px; border-radius: 16px; min-height: 84px; background: var(--physics-l); border-color: var(--physics); }
+  .metric small { display: block; color: #535456; margin-bottom: 6px; font-size: 13px; }
+  .metric strong { font-size: 20px; font-variant-numeric: tabular-nums; }
+  .explain { margin-top: 12px; padding: 14px 15px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; line-height: 1.8; font-size: 15px; }
+
+  .visual-section { position: sticky; top: 0; z-index: 20; background: var(--bg); margin: 0 calc(-1 * var(--pad)); padding: 6px var(--pad) 8px; box-shadow: 0 6px 8px -6px rgba(66,67,68,.25); }
+  .visual-header { display: none; }
+  #visual { max-height: 46vh; }
+  .visual-header h2 { font-size: 20px; margin-bottom: 4px; }
+  .visual-header p { color: var(--mut); margin: 0 0 10px; line-height: 1.6; font-size: 14px; }
+  .figure-card { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 6px; box-shadow: 0 1px 3px rgba(66,67,68,.05); }
+  .figure-toolbar { display: flex; flex-wrap: nowrap; align-items: center; gap: 8px; margin-top: 6px; }
+  .visual-controls { display: flex; align-items: center; gap: 8px; }
+  .visual-controls label { color: var(--ink2); font-size: 14px; white-space: nowrap; }
+  .visual-controls select { width: auto; min-height: 44px; font-size: 15px; padding: 6px 10px; }
+  svg rect[stroke="#d0d1d2"] { fill: var(--surface); stroke: var(--line); }
+  svg line[stroke="#d0d1d2"] { stroke: var(--zero); }
+  svg [stroke="#a6a7aa"] { stroke: var(--axis); }
+  svg [fill="#68696b"] { fill: var(--mut); }
+  svg [fill="#535456"] { fill: var(--ink2); }
+  svg [stroke="#535456"] { stroke: var(--ink2); }
+  #wavePath { stroke: var(--wave); }
+  #ampTopLine, #ampBotLine { stroke: var(--ampl); }
+  #ampTopText, #ampBotText { fill: var(--ampl-t); }
+  .hero { margin-bottom: 14px; padding: 14px 18px 16px; background: var(--physics-l); border: 1px solid var(--physics); border-radius: 20px; color: #424344; }
+  .hero h1 { color: #424344; }
+  .hero .subtitle { margin-bottom: 0; color: #535456; }
+  .hero .subject-tag { background: #fff; }
+  .controls, .figure-card { border-top: 4px solid var(--physics); }
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+  .topbar h1 { margin: 0; }
+  button.theme-btn { min-height: 36px; padding: 4px 12px; font-size: 13.5px; }
+  svg { display: block; width: 100%; height: auto; overflow: visible; }
+  #graphTicks text, #particleTicks { font-size: 12px; }
+  .formula { padding: 16px; background: var(--physics-l); border: 1px solid var(--physics); border-radius: 16px; line-height: 1.85; text-align: center; }
+  .formula strong { display: block; }
+  .dot-icon { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--ind); vertical-align: middle; }
+  [hidden] { display: none !important; }
+  .note { padding: 14px 16px; background: var(--info-bg); border: 1px solid var(--info-border); border-radius: 12px; color: var(--info-fg); font-size: 14px; line-height: 1.75; }
+  .note.warn { background: var(--info-bg); border-color: var(--info-border); color: var(--info-fg); }
+
+
+  /* ===== v2: กรอบฟ้า (Primary/100) + พื้นกราฟส้มอ่อน (Physics tint) + การ์ดขาว ===== */
+  :root { --bg: #ffffff; --frame: #cfefff; } /* lightblue/100 */
+  :root[data-theme="dark"] { --frame: #004991; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --frame: #004991; } }
+  .hero { background: transparent; border: none; border-radius: 0; padding: 4px 8px 2px; margin: 0; color: var(--ink); }
+  .hero h1 { color: var(--ink); }
+  .hero .subtitle { color: var(--ink2); }
+  .layout { background: var(--frame); border-radius: 28px; padding: 12px; }
+  .visual-section { background: var(--surface); margin: 0; padding: 10px; top: 8px; box-shadow: 0 -10px 0 0 var(--frame); border-radius: 20px; }
+  .visual-section .figure-toolbar { margin-top: 10px; }
+  .card, .explain, .formula { border: none; box-shadow: none; }
+  .controls, .figure-card { border-top: none; }
+  .figure-card { background: transparent; border: none; padding: 0; box-shadow: none; }
+  .card-title { padding-left: 0; border-left: none; }
+  .control-header strong { padding: 2px 12px; background: var(--physics-l); border: 1px solid var(--physics); border-radius: 99px; color: #424344; font-size: 16px; }
+  input[type=range]::-webkit-slider-thumb { background: #fff; border: 3px solid var(--physics); }
+  input[type=range]::-moz-range-thumb { background: #fff; border: 3px solid var(--physics); }
+  .metrics { padding: 12px; background: var(--physics-l); border-radius: 18px; }
+  .metric { background: #fff; border: none; color: #424344; }
+  .metric small { color: #535456; }
+  button.primary { background: var(--physics-l); color: #424344; border: 2px solid var(--physics); }
+  button.step { background: var(--physics-l); border: 2px solid var(--physics); color: #424344; }
+
+  /* ปุ่มตำแหน่ง/เวลา: ติดกันเป็นแถบเดียว (segmented control) */
+  .seg { display: flex; gap: 0; flex: 0 0 auto; border: 1.5px solid var(--btn-border); border-radius: 14px; overflow: hidden; background: var(--surface); }
+  button.seg-btn { min-height: 44px; padding: 10px 18px; border: none; border-radius: 0; background: transparent; color: var(--ink); font-size: 15px; font-weight: 700; }
+  button.seg-btn:first-child { border-radius: 12px 0 0 12px; }
+  button.seg-btn:last-child { border-radius: 0 12px 12px 0; }
+  button.seg-btn.active { background: var(--physics-l); color: #424344; box-shadow: inset 0 0 0 2px var(--physics); }
+  button.seg-btn:focus-visible { outline-offset: -3px; }
+  @media (max-width: 640px) { button.seg-btn { min-height: 40px; padding: 8px 12px; font-size: 14px; } }
+  #plotPanel { fill: #fff; stroke: #68696b; stroke-width: 1.5; }
+  #molPanel { fill: #fff; stroke: #68696b; stroke-width: 1.5; }
+  svg line[stroke="#d0d1d2"] { stroke: #babcbd; }
+  svg [stroke="#a6a7aa"] { stroke: #929497; }
+  svg [fill="#68696b"] { fill: #535456; }
+  svg [fill="#535456"] { fill: #424344; }
+  svg [stroke="#535456"] { stroke: #424344; }
+  #wavePath, #ampTopLine, #ampBotLine { stroke: #0080ff; }
+  #ampTopText, #ampBotText { fill: #0055a4; }
+
+  @media (max-width: 640px) {
+    :root { --pad: 12px; }
+    .card { padding: 16px; }
+    .visual-controls label { display: none; }
+    .visual-controls select { min-height: 40px; font-size: 14px; }
+    button { padding: 8px 12px; min-height: 40px; font-size: 14px; }
+    #graphTicks text, #particleTicks { font-size: 16px; }
+    #graphAxisTitle { font-size: 14px; }
+    #graphModeLabel, #visual text[y="254"][text-anchor="end"] { display: none; }
+    #ampTopText, #ampBotText, #visual text[x="119"] { font-size: 14px; }
+    #rulerText, #visual text[x="52"], #visual text[x="57"] { font-size: 15px; }
+    #regions text { font-size: 14px; }
+    .metric strong { font-size: 18px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="layout">
+    <header class="hero">
+    <div class="topbar"><h1>คลื่นเสียง</h1><button id="themeBtn" type="button" class="theme-btn" aria-label="สลับโหมดสว่าง/มืด">โหมดมืด</button></div>
+  
+  <p class="subtitle">ทดลองปรับความถี่ แอมพลิจูด อุณหภูมิอากาศ และอัตราเร็วเสียง เพื่อดูลักษณะของคลื่นเสียงที่เดินทางในอากาศ</p>
+  </header>
+    <div class="col-main">
+      <section class="visual-section" aria-label="ภาพเคลื่อนไหวคลื่นเสียง">
+        <div class="visual-header">
+          <h2>การกระจัดกับการสั่นของโมเลกุลอากาศ</h2>
+          <p>ทั้งสองภาพใช้เฟสคลื่นเดียวกัน ภาพถูกขยายการสั่นและทำให้ช้าลงมากเพื่อให้สังเกตได้</p>
+        </div>
+        <div class="figure-card">
+      <svg id="visual" viewBox="0 0 760 433" role="img" aria-label="กราฟการกระจัดด้านบนและโมเลกุลอากาศสั่นตามยาวด้านล่าง">
+        <!-- กราฟการกระจัด -->
+        <rect id="plotPanel" x="35" y="7" width="690" height="214" rx="14" fill="#fdead6" stroke="#e5e5e6"/>
+        <defs><pattern id="gridPat" x="130" y="0" width="71.25" height="28" patternUnits="userSpaceOnUse"><path d="M0 0H71.25M0 0V28" fill="none" stroke="#babcbd" stroke-width="1" opacity="0.7"/></pattern></defs>
+        <rect x="130" y="47" width="570" height="137" fill="url(#gridPat)"/>
+        <text id="graphModeLabel" x="700" y="29" text-anchor="end" font-size="11" fill="#68696b">ระยะทางที่แสดง 2.2 m</text>
+        <line x1="130" y1="112" x2="700" y2="112" stroke="#d0d1d2" stroke-width="1.5" stroke-dasharray="4 4"/>
+        <line x1="130" y1="47" x2="130" y2="183" stroke="#a6a7aa" stroke-width="1.5"/>
+        <line x1="130" y1="184" x2="700" y2="184" stroke="#a6a7aa" stroke-width="1.5"/>
+        <text x="119" y="59" font-size="11" text-anchor="end" fill="#68696b">+ (ขวา)</text>
+        <text x="119" y="116" font-size="11" text-anchor="end" fill="#68696b">0</text>
+        <text x="119" y="170" font-size="11" text-anchor="end" fill="#68696b">− (ซ้าย)</text>
+        <text x="52" y="112" transform="rotate(-90 52 112)" text-anchor="middle" font-size="12" font-weight="bold" fill="#535456">การกระจัด</text>
+        <line id="ampTopLine" x1="130" x2="700" y1="56" y2="56" stroke="#2e97ff" stroke-width="1" stroke-dasharray="2 4" opacity="0.5"/>
+        <line id="ampBotLine" x1="130" x2="700" y1="168" y2="168" stroke="#2e97ff" stroke-width="1" stroke-dasharray="2 4" opacity="0.5"/>
+        <text id="ampTopText" x="705" y="60" font-size="11" font-weight="bold" fill="#0055a4">+A</text>
+        <text id="ampBotText" x="705" y="172" font-size="11" font-weight="bold" fill="#0055a4">−A</text>
+        <path id="wavePath" fill="none" stroke="#0080ff" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+        <circle id="waveReferenceHalo" cx="420" cy="112" r="9" fill="#f5891f" opacity="0.25"/>
+        <circle id="waveReference" cx="420" cy="112" r="4.5" fill="#f5891f" stroke="#424344" stroke-width="1.8"/>
+        <g id="ruler" stroke="#535456" stroke-width="1.5">
+          <line id="rulerLine" y1="42" y2="42"/><line id="rulerL" y1="37" y2="47"/><line id="rulerR" y1="37" y2="47"/>
+          <text id="rulerText" y="35" font-size="11.5" font-weight="bold" fill="#535456" stroke="none" text-anchor="middle"></text>
+        </g>
+        <g id="graphTicks"></g>
+        <text id="graphAxisTitle" x="415" y="213" font-size="11.5" text-anchor="middle" font-weight="bold" fill="#535456">การกระจัด</text>
+        <!-- กราฟโมเลกุล -->
+        <rect id="molPanel" x="35" y="229" width="690" height="190" rx="14" fill="#fff" stroke="#e5e5e6"/>
+        <text x="57" y="254" font-size="13" font-weight="bold" fill="#535456">โมเลกุลอากาศ</text>
+        <text x="700" y="254" text-anchor="end" font-size="11" fill="#68696b">สั่นไป–กลับรอบตำแหน่งสมดุล</text>
+        <g id="speaker" transform="translate(33,288) scale(0.5)">
+          <defs><linearGradient id="spkFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fdead6"/><stop offset="1" stop-color="#fdead6"/></linearGradient></defs>
+          <rect x="30" y="50" width="36" height="60" rx="7" fill="url(#spkFill)" stroke="#f5891f" stroke-width="5"/>
+          <path id="speakerBody" d="M66 62 L108 36 V124 L66 98 Z" fill="url(#spkFill)" stroke="#f5891f" stroke-width="5" stroke-linejoin="round"/>
+          <line id="speakerCone" x1="108" y1="36" x2="108" y2="124" stroke="#f5891f" stroke-width="5" stroke-linecap="round"/>
+          <g fill="none" stroke="#f5891f" stroke-width="7" stroke-linecap="round">
+            <path id="soundArc1" d="M138 62 Q156 80 138 98"/>
+            <path id="soundArc2" d="M152 50 Q180 80 152 110" opacity="0.65"/>
+            <path id="soundArc3" d="M166 38 Q204 80 166 122" opacity="0.35"/>
+          </g>
+        </g>
+        <g id="particles"></g>
+        <g id="regions"></g>
+        <circle id="particleReferenceHalo" cx="420" cy="327" r="10" fill="#f5891f" opacity="0.25"/>
+        <circle id="particleReference" cx="420" cy="327" r="5.2" fill="#f5891f" stroke="#424344" stroke-width="1.8"/>
+        <g id="particleTicks" font-size="10" fill="#68696b" text-anchor="middle"></g>
+      </svg>
+    </div>
+        <div class="figure-toolbar">
+          <div class="visual-controls"><label for="xAxisMode">แกน X</label>
+            <select id="xAxisMode" hidden aria-label="เลือกรูปแบบแกน X">
+              <option value="position">ตำแหน่ง</option>
+              <option value="time">เวลา</option>
+            </select>
+            <div class="seg" role="group" aria-label="เลือกรูปแบบแกน X">
+              <button type="button" class="seg-btn active" data-v="position">ตำแหน่ง</button>
+              <button type="button" class="seg-btn" data-v="time">เวลา</button>
+            </div>
+          </div>
+          <button id="pauseBtn" type="button" class="primary">หยุด</button>
+          <button id="resetBtn" type="button">รีเซ็ต</button>
+        </div>
+      </section>
+      <div id="rangeWarn" class="note warn" role="status" hidden></div>
+      <div class="formula"><strong>ความสัมพันธ์สำคัญ</strong>v = fλ &nbsp;•&nbsp; T = 1/f &nbsp;•&nbsp; λ = v/f<br>คาบปัจจุบัน T = <span id="periodValue">2.27</span> ms<br>v ขึ้นกับตัวกลางและอุณหภูมิ ไม่ขึ้นกับ f หรือ A เมื่อเปลี่ยน f ค่า v คงเดิม λ จึงเปลี่ยนแทน</div>
+    </div>
+    <div class="col-side">
+      <section class="card controls" aria-label="ปรับค่าคลื่นเสียง">
+        <h2 class="card-title">ปรับเสียง</h2>
+        <div class="control-group">
+          <div class="control-header"><label for="frequency">ความถี่ f (เสียงสูง–ต่ำ)</label><strong>Hz</strong></div>
+          <div class="num-row">
+            <button type="button" class="step" data-target="frequency" data-step="-10" aria-label="ลดความถี่ 10 Hz">−</button>
+            <input id="frequency" type="number" inputmode="numeric" min="100" max="1200" step="1" value="440" aria-describedby="frequencyHint">
+            <button type="button" class="step" data-target="frequency" data-step="10" aria-label="เพิ่มความถี่ 10 Hz">+</button>
+          </div>
+          <small id="frequencyHint" class="input-hint" aria-live="polite"></small>
+        </div>
+        <div class="control-group">
+          <div class="control-header"><label for="amplitude">แอมพลิจูด A</label><strong><span id="amplitudeValue">60</span> / 100</strong></div>
+          <input id="amplitude" type="range" min="0" max="100" step="1" value="60" aria-label="แอมพลิจูด 0 ถึง 100">
+          <div class="range-label"><span>0 (ไม่มีเสียง)</span><span>100 (ดังสุด)</span></div>
+        </div>
+
+        <div class="control-group" id="airSettings">
+          <div class="control-header"><label for="temperature">อุณหภูมิอากาศ</label><strong>°C</strong></div>
+          <div class="num-row">
+            <button type="button" class="step" data-target="temperature" data-step="-1" aria-label="ลดอุณหภูมิ 1 องศา">−</button>
+            <input id="temperature" type="number" inputmode="numeric" min="-50" max="50" step="1" value="20" aria-describedby="temperatureHint">
+            <button type="button" class="step" data-target="temperature" data-step="1" aria-label="เพิ่มอุณหภูมิ 1 องศา">+</button>
+          </div>
+          <small id="temperatureHint" class="input-hint" aria-live="polite">กรอกค่า −50 ถึง 50 °C</small>
+        </div>
+        <div class="control-group">
+          <div class="control-header"><label for="speed">อัตราเร็วเสียง v</label><strong>m/s</strong></div>
+          <div class="num-row">
+            <button type="button" class="step" data-target="speed" data-step="-10" aria-label="ลดอัตราเร็ว 10 m/s">−</button>
+            <input id="speed" type="number" inputmode="decimal" min="1" max="10000" step="0.1" value="343.2" aria-describedby="speedHint">
+            <button type="button" class="step" data-target="speed" data-step="10" aria-label="เพิ่มอัตราเร็ว 10 m/s">+</button>
+          </div>
+          <small id="speedHint" class="input-hint" aria-live="polite"></small>
+        </div>
+      </section>
+      <section class="info" aria-label="ข้อมูลคลื่นเสียง">
+      <div class="metrics">
+        <div class="metric"><small>ระดับเสียง (สูง–ต่ำ)</small><strong id="pitchCard">ปานกลาง</strong></div>
+        <div class="metric"><small>ความดัง</small><strong id="loudCard">ปานกลาง</strong></div>
+        <div class="metric"><small>อัตราเร็วเสียง v</small><strong id="speedCard">343.2 m/s</strong></div>
+        <div class="metric"><small>ความยาวคลื่น λ</small><strong id="lambdaCard">0.780 m</strong></div>
+      </div>
+      <div class="explain" id="explain" aria-live="polite"></div>
+    </section>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const frequency = $('frequency');
+const amplitude = $('amplitude');
+const temperature = $('temperature');
+const speedInput = $('speed');
+const modeInput = $('xAxisMode');
+const wavePath = $('wavePath');
+const particlesGroup = $('particles');
+const refGraph = $('waveReference');
+const refGraphHalo = $('waveReferenceHalo');
+const refParticle = $('particleReference');
+const refParticleHalo = $('particleReferenceHalo');
+const pauseBtn = $('pauseBtn');
+const ampTopLine = $('ampTopLine'), ampBotLine = $('ampBotLine'), ampTopText = $('ampTopText'), ampBotText = $('ampBotText');
+const regionEls = [];
+(function () {
+  const g = $('regions');
+  for (let i = 0; i < 32; i++) {
+    const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    t.setAttribute('y', '271'); t.setAttribute('font-size', '10.5'); t.setAttribute('font-weight', 'bold');
+    t.setAttribute('text-anchor', 'middle'); t.setAttribute('visibility', 'hidden');
+    g.appendChild(t); regionEls.push(t);
+  }
+})();
+const SVG_NS = 'http://www.w3.org/2000/svg';
+const TAU = 2 * Math.PI;
+const VIEW = Object.freeze({left: 130, right: 700, meters: 2.2, refX: 440, midY: 112, maxWaveHeight: 56, moleculeY: 326});
+const defaults = Object.freeze({frequency: 440, amplitude: 60, temp: 20});
+let committedF = defaults.frequency;
+let committedTemp = defaults.temp;
+let committedSpeed = airSpeedAt(defaults.temp);
+let speedOverridden = false;
+let phase = 0;
+let paused = false;
+let lastTime = performance.now();
+const dots = [];
+
+// แบบจำลองอากาศอุดมคติ: ความเร็วเสียงแปรตามรากที่สองของอุณหภูมิสัมบูรณ์
+function airSpeedAt(t) { return Math.round(331.3 * Math.sqrt((273.15 + t) / 273.15) * 10) / 10; }
+function numberText(n, digits = 1) { return Number(n.toFixed(digits)).toLocaleString('en-US', {maximumFractionDigits: digits}); }
+function pitchText(f) { return f < 300 ? 'ต่ำ' : f < 700 ? 'ปานกลาง' : 'สูง'; }
+function loudText(a) { return a === 0 ? 'ไม่มีการสั่น' : a < 35 ? 'เบา' : a < 75 ? 'ปานกลาง' : 'ดัง'; }
+function seededRandom(seed) {
+  let s = seed >>> 0;
+  return () => { s = (Math.imul(1664525, s) + 1013904223) >>> 0; return s / 4294967296; };
+}
+
+// จุดสมดุลกระจัดกระจายแน่นอน ไม่สุ่มใหม่ทุกเฟรม เพื่อเห็นคลื่นตามยาว
+function makeParticles() {
+  dots.length = 0;
+  const rand = seededRandom(29041);
+  const fragment = document.createDocumentFragment();
+  const taken = [];
+  const desired = 440;
+  let attempts = 0;
+  while (dots.length < desired && attempts < desired * 120) {
+    attempts++;
+    const x = VIEW.left + 6 + (VIEW.right - VIEW.left - 12) * rand();
+    const y = 277 + 100 * rand();
+    if (taken.some(p => (x-p.x)**2 + (y-p.y)**2 < 6**2)) continue;
+    const el = document.createElementNS(SVG_NS, 'circle');
+    el.setAttribute('cx', x.toFixed(2));
+    el.setAttribute('cy', y.toFixed(2));
+    el.setAttribute('r', '2.6');
+    el.setAttribute('fill', '#0080ff');
+    el.setAttribute('opacity', '0.82');
+    fragment.appendChild(el);
+    dots.push({x, el});
+    taken.push({x,y});
+  }
+  particlesGroup.replaceChildren(fragment);
+}
+
+function getState() {
+  const amp = Number(amplitude.value) / 100;
+  const wavelength = committedSpeed / committedF;
+  const kPx = TAU * VIEW.meters / (wavelength * (VIEW.right - VIEW.left));
+  return { f:committedF, amp, v:committedSpeed, wavelength, kPx,
+    waveHeight: amp * VIEW.maxWaveHeight,
+    moleculeShift: amp * Math.min(20, 0.66 / kPx)
+  };
+}
+function thetaAt(x, state) { return state.kPx * (x - VIEW.left) - phase; }
+function displacementAt(x, state) { return Math.sin(thetaAt(x, state)); }
+
+function updateInfo() {
+  syncSeg();
+  const s = getState();
+  const a = Number(amplitude.value);
+  const formattedLambda = s.wavelength < 1 ? s.wavelength.toFixed(3) : s.wavelength.toFixed(s.wavelength < 10 ? 2 : 1);
+  $('amplitudeValue').textContent = String(a);
+  $('amplitude').style.setProperty('--val', a + '%');
+  $('pitchCard').textContent = pitchText(s.f);
+  $('loudCard').textContent = loudText(a);
+  const arcCount = a === 0 ? 0 : a < 35 ? 1 : a < 75 ? 2 : 3;
+  [1, 2, 3].forEach(n => $('soundArc' + n).setAttribute('visibility', n <= arcCount ? 'visible' : 'hidden'));
+  $('speedCard').textContent = `${numberText(s.v, 1)} m/s`;
+  $('lambdaCard').textContent = `${formattedLambda} m`;
+  $('periodValue').textContent = (1000 / s.f).toFixed(2);
+  const warn = $('rangeWarn');
+  const tooLong = s.wavelength > VIEW.meters;
+  warn.hidden = !tooLong;
+  if (tooLong) warn.textContent = `ความยาวคลื่น ${formattedLambda} m ยาวกว่าช่วงที่แสดง (${VIEW.meters} m) จึงเห็นเพียงบางส่วนของคลื่น ลองเพิ่มความถี่เพื่อให้เห็นครบอย่างน้อยหนึ่งช่วงคลื่น`;
+  const speedDetails = speedOverridden ? 'ค่าที่กรอกเอง ไม่ได้คำนวณจากอุณหภูมิ อาจเป็นตัวกลางอื่นที่ไม่ใช่อากาศ' : `ค่าประมาณสำหรับอากาศที่ ${committedTemp} °C`;
+  $('explain').innerHTML = `ความถี่ <strong>${s.f} Hz</strong> ให้เสียงระดับ <strong>${pitchText(s.f)}</strong> ${a === 0 ? 'แต่แอมพลิจูดเป็น <strong>0</strong> จึง<strong>ไม่มีการสั่นและไม่มีเสียง</strong>' : `และแอมพลิจูด <strong>${a}/100</strong> คือการสั่นไป–กลับของโมเลกุลอากาศรอบตำแหน่งสมดุล`}<br>` +
+    `อัตราเร็วเสียง <strong>${numberText(s.v,1)} m/s</strong> (${speedDetails}) จึงมีความยาวคลื่น <strong>${formattedLambda} m</strong>`;
+}
+
+function createTicks() {
+  const top = $('graphTicks');
+  const bottom = $('particleTicks');
+  top.replaceChildren(); bottom.replaceChildren();
+  const s = getState();
+  const timeAxis = modeInput.value === 'time';
+  const mk = (tag, attrs) => { const e = document.createElementNS(SVG_NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; };
+  for (let i=0; i<=4; i++) {
+    const x = (VIEW.left + (VIEW.right - VIEW.left) * i / 4).toFixed(2);
+    const posLabel = numberText(VIEW.meters * i / 4, 2) + (i === 4 ? ' m' : '');
+    const ptxt = mk('text', {x, y:'406'});
+    ptxt.textContent = posLabel;
+    bottom.appendChild(ptxt);
+    top.appendChild(mk('line', {x1:x, x2:x, y1:'184', y2:'189', stroke:'#a6a7aa', 'stroke-width':'1.5'}));
+    const ttxt = mk('text', {x, y:'201', 'font-size':'10', 'text-anchor':'middle', fill:'#68696b'});
+    ttxt.textContent = timeAxis ? numberText(2000 / s.f * i / 4, 2) + (i === 4 ? ' ms' : '') : posLabel;
+    top.appendChild(ttxt);
+  }
+  // ไม้บรรทัด: 1 ความยาวคลื่น (โหมดตำแหน่ง) หรือ 1 คาบ (โหมดเวลา)
+  const spanPx = timeAxis ? (VIEW.right - VIEW.left) / 2 : TAU / s.kPx;
+  const showRuler = spanPx <= (VIEW.right - VIEW.left) + 0.5;
+  const rl = $('rulerLine'), rL = $('rulerL'), rR = $('rulerR'), rt = $('rulerText');
+  [rl, rL, rR, rt].forEach(e => e.setAttribute('visibility', showRuler ? 'visible' : 'hidden'));
+  if (showRuler) {
+    const x2 = (VIEW.left + spanPx).toFixed(1);
+    rl.setAttribute('x1', VIEW.left); rl.setAttribute('x2', x2);
+    rL.setAttribute('x1', VIEW.left); rL.setAttribute('x2', VIEW.left);
+    rR.setAttribute('x1', x2); rR.setAttribute('x2', x2);
+    rt.setAttribute('x', (VIEW.left + spanPx / 2).toFixed(1));
+    const lam = s.wavelength < 1 ? s.wavelength.toFixed(3) : s.wavelength.toFixed(s.wavelength < 10 ? 2 : 1);
+    rt.textContent = timeAxis ? `T = ${(1000 / s.f).toFixed(2)} ms` : `λ = ${lam} m`;
+  }
+  $('graphAxisTitle').textContent = timeAxis ? 'เวลา t (ms) — ซ้ายสุดคือขณะนี้ ไปทางขวาคืออนาคต' : 'ตำแหน่ง x (m) — ตามตำแหน่งสมดุลของโมเลกุล';
+  $('graphModeLabel').textContent = timeAxis ? 'การกระจัดของโมเลกุลสีม่วง (2 คาบ)' : 'ภาพชั่วขณะ (ช่วง 2.2 m)';
+}
+
+function drawWave(s) {
+  let path = '';
+  const isTime = modeInput.value === 'time';
+  const currentTheta = thetaAt(VIEW.refX, s);
+  for (let x=VIEW.left; x<=VIEW.right; x+=2) {
+    const progress = (x - VIEW.left) / (VIEW.right - VIEW.left);
+    const val = isTime ? Math.sin(currentTheta - TAU * 2 * progress) : displacementAt(x,s);
+    const y = VIEW.midY - s.waveHeight * val;
+    path += `${x === VIEW.left ? 'M' : 'L'}${x.toFixed(1)} ${y.toFixed(2)} `;
+  }
+  wavePath.setAttribute('d', path);
+  const markerX = isTime ? VIEW.left : VIEW.refX;
+  const markerY = VIEW.midY - s.waveHeight * Math.sin(currentTheta);
+  refGraph.setAttribute('cx', markerX.toFixed(2));
+  refGraph.setAttribute('cy', markerY.toFixed(2));
+  refGraphHalo.setAttribute('cx', markerX.toFixed(2));
+  refGraphHalo.setAttribute('cy', markerY.toFixed(2));
+  const yT = VIEW.midY - s.waveHeight, yB = VIEW.midY + s.waveHeight;
+  const vis = s.amp === 0 ? 'hidden' : 'visible';
+  for (const [el, y] of [[ampTopLine, yT], [ampBotLine, yB]]) { el.setAttribute('y1', y.toFixed(1)); el.setAttribute('y2', y.toFixed(1)); el.setAttribute('visibility', vis); }
+  ampTopText.setAttribute('y', (yT + 4).toFixed(1)); ampBotText.setAttribute('y', (yB + 4).toFixed(1));
+  ampTopText.setAttribute('visibility', vis); ampBotText.setAttribute('visibility', vis);
+}
+function drawParticles(s) {
+  for (const dot of dots) {
+    const x = dot.x + s.moleculeShift * displacementAt(dot.x,s);
+    dot.el.setAttribute('cx', x.toFixed(2));
+  }
+  const refX = VIEW.refX + s.moleculeShift * displacementAt(VIEW.refX,s);
+  refParticle.setAttribute('cx', refX.toFixed(2));
+  refParticleHalo.setAttribute('cx', refX.toFixed(2));
+  const coneShift = -s.moleculeShift * Math.sin(phase) * 0.55;
+  const dx = coneShift / 0.5;
+  $('speakerCone').setAttribute('transform', `translate(${dx.toFixed(2)},0)`);
+  $('speakerBody').setAttribute('d', `M66 62 L${(108 + dx).toFixed(2)} 36 V124 L66 98 Z`);
+  // เส้นคลื่นเสียงกะพริบตามเฟส: เส้นในสว่างสุดตอนกรวยดันอากาศแรงสุด (ส่วนอัด) แล้วไล่ออกไปเส้นนอก
+  [1, 2, 3].forEach(n => {
+    const b = 0.5 - 0.5 * Math.cos(phase - (n - 1) * TAU / 3);
+    $('soundArc' + n).setAttribute('opacity', ((0.2 + 0.8 * b) * (1.15 - 0.15 * n)).toFixed(2));
+  });
+}
+// ป้าย อัด/ขยาย: อัดอยู่ที่ θ = π (mod 2π) ซึ่งกราฟตัดแกน 0 ขาลง, ขยายอยู่ที่ θ = 0 (mod 2π)
+function drawRegions(s) {
+  let i = 0;
+  if (TAU / s.kPx >= 40) {
+    for (let m = Math.ceil(-phase / Math.PI); i < regionEls.length; m++) {
+      const x = VIEW.left + (m * Math.PI + phase) / s.kPx;
+      if (x > VIEW.right - 10) break;
+      if (x < VIEW.left + 10) continue;
+      const compress = Math.abs(m % 2) === 1;
+      const el = regionEls[i++];
+      el.setAttribute('x', x.toFixed(1));
+      el.setAttribute('fill', '#535456');
+      el.setAttribute('visibility', 'visible');
+      el.textContent = compress ? 'อัด' : 'ขยาย';
+    }
+  }
+  for (; i < regionEls.length; i++) regionEls[i].setAttribute('visibility', 'hidden');
+}
+function render() { const s=getState(); drawWave(s); drawParticles(s); drawRegions(s); }
+function tick(now) {
+  const dt = Math.max(0, Math.min(45, now - lastTime));
+  lastTime = now;
+  if (!paused) {
+    // ความเร็วภาพจำลอง (ไม่ใช่ความเร็วเสียงจริง) ลดให้โมเลกุลสังเกตง่ายและยังซิงก์กับกราฟ
+    const visualCyclesPerSecond = 0.2 + (committedF - 100) / 1100 * 0.2;
+    phase = (phase + dt / 1000 * TAU * visualCyclesPerSecond) % TAU;
+    render();
+  }
+  requestAnimationFrame(tick);
+}
+
+// ระหว่างพิมพ์ค่าที่ไม่สมบูรณ์คงค่าฟิสิกส์ล่าสุดไว้ แล้วคืนค่า/จำกัดช่วงเมื่อออกจากช่อง
+function wireNumeric(el, config) {
+  const hint = $(config.hint);
+  const valid = v => v.trim() !== '' && Number.isFinite(Number(v)) && Number(v) >= config.min && Number(v) <= config.max && (!config.integer || Number.isInteger(Number(v)));
+  const show = ok => {
+    el.classList.toggle('invalid', !ok);
+    el.setAttribute('aria-invalid', String(!ok));
+    hint.classList.toggle('error', !ok);
+    hint.textContent = ok ? config.description() : `กรุณากรอก${config.integer ? 'จำนวนเต็ม' : 'ตัวเลข'}ระหว่าง ${config.min} ถึง ${numberText(config.max,0)} ${config.unit}`;
+  };
+  el.addEventListener('input', () => {
+    const ok = valid(el.value); show(ok);
+    if (!ok) return;
+    config.commit(Number(el.value)); updateInfo(); createTicks(); render();
+  });
+  const finish = () => {
+    const n = el.value.trim() === '' ? NaN : Number(el.value);
+    const finalValue = Number.isFinite(n) ? Math.min(config.max, Math.max(config.min, config.integer ? Math.round(n) : n)) : config.current();
+    if (finalValue !== config.current()) config.commit(finalValue);
+    el.value = String(config.current());
+    show(true); updateInfo(); createTicks(); render();
+  };
+  el.addEventListener('change', finish);
+  el.addEventListener('blur', finish);
+  return () => show(true);
+}
+const showFrequency = wireNumeric(frequency, {
+  min:100, max:1200, integer:true, hint:'frequencyHint', unit:'Hz',
+  description: ()=>'',
+  current:()=>committedF,
+  commit:n=>{committedF=n;}
+});
+const showTemp = wireNumeric(temperature, {
+  min:-50,max:50,integer:true,hint:'temperatureHint',unit:'°C',
+  description:()=> 'กรอกค่า −50 ถึง 50 °C',
+  current:()=>committedTemp,
+  commit:n=>{committedTemp=n; committedSpeed=airSpeedAt(n); speedOverridden=false; speedInput.value=String(committedSpeed); showSpeed();}
+});
+const showSpeed = wireNumeric(speedInput, {
+  min:1,max:10000,integer:false,hint:'speedHint',unit:'m/s',
+  description:()=>speedOverridden ? 'พิมพ์อัตราเร็วเอง 1–10,000 m/s • ปรับอุณหภูมิเพื่อคำนวณค่าของอากาศใหม่' : 'คำนวณจากอุณหภูมิอากาศ (20 °C ≈ 343 m/s) หรือพิมพ์ค่าเองได้',
+  current:()=>committedSpeed,
+  commit:n=>{committedSpeed=n; speedOverridden=true;}
+});
+
+amplitude.addEventListener('input',()=>{updateInfo();render();});
+modeInput.addEventListener('change',()=>{createTicks();render();syncSeg();});
+pauseBtn.addEventListener('click',()=>{
+  paused=!paused;
+  pauseBtn.textContent = paused ? 'เล่น' : 'หยุด';
+  lastTime = performance.now();
+});
+$('resetBtn').addEventListener('click',()=>{
+  committedF=defaults.frequency; committedTemp=defaults.temp; committedSpeed=airSpeedAt(committedTemp); speedOverridden=false;
+  frequency.value=String(committedF); amplitude.value=String(defaults.amplitude); temperature.value=String(committedTemp); speedInput.value=String(committedSpeed);
+  modeInput.value='position';
+  showFrequency();showTemp();showSpeed();
+  phase=0;paused=false;lastTime=performance.now();pauseBtn.textContent='หยุด';
+  updateInfo();createTicks();render();
+});
+
+// สไลเดอร์ ปุ่ม − + และปุ่มลัดความถี่ ส่งค่าเข้าช่องตัวเลข เพื่อใช้การตรวจค่าและการคำนวณชุดเดียวกัน
+const pushValue = (el, v) => { el.value = String(v); el.dispatchEvent(new Event('input')); };
+document.querySelectorAll('button.step').forEach(b => b.addEventListener('click', () => {
+  const el = $(b.dataset.target);
+  const v = (Number(el.value) || 0) + Number(b.dataset.step);
+  pushValue(el, Math.round(Math.min(Number(el.max), Math.max(Number(el.min), v)) * 10) / 10);
+}));
+// ล้อเมาส์ไม่เปลี่ยนค่าในช่องตัวเลข: ถ้าช่องกำลังถูกโฟกัสอยู่ให้ปล่อยโฟกัส เบราว์เซอร์จึงเลื่อนหน้าแทน
+[frequency, temperature, speedInput].forEach(el =>
+  el.addEventListener('wheel', () => { if (document.activeElement === el) el.blur(); }, { passive: true }));
+
+function syncSeg() { document.querySelectorAll('.seg-btn').forEach(b => b.classList.toggle('active', b.dataset.v === modeInput.value)); }
+document.querySelectorAll('.seg-btn').forEach(b => b.addEventListener('click', () => { modeInput.value = b.dataset.v; modeInput.dispatchEvent(new Event('change')); }));
+
+// โหมดสว่าง/มืด: เริ่มตามระบบของเครื่อง กดปุ่มเพื่อสลับเอง
+const themeBtn = $('themeBtn'), darkMQ = window.matchMedia('(prefers-color-scheme: dark)');
+const isDark = () => document.documentElement.dataset.theme ? document.documentElement.dataset.theme === 'dark' : darkMQ.matches;
+const syncTheme = () => { themeBtn.textContent = isDark() ? 'โหมดสว่าง' : 'โหมดมืด'; };
+themeBtn.addEventListener('click', () => { document.documentElement.dataset.theme = isDark() ? 'light' : 'dark'; syncTheme(); });
+darkMQ.addEventListener('change', syncTheme);
+syncTheme();
+
+makeParticles();
+speedInput.value=String(committedSpeed);
+showFrequency();showTemp();showSpeed();
+updateInfo();createTicks();render();
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>
