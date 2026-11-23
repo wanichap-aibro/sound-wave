@@ -200,6 +200,16 @@
     .controls .eq-box code { font-size: 14px; margin: 2px 0; }
     .controls .eq-box .eq-res { font-size: 12px; }
   }
+
+  /* มือถือ: ลดขอบรอบกราฟเพื่อให้กราฟใหญ่ขึ้น */
+  @media (max-width: 640px) {
+    :root { --pad: 8px; }
+    .layout { padding: 6px; border-radius: 22px; gap: 10px; }
+    .hero { padding: 2px 6px 0; }
+    .visual-section { padding: 6px; top: 6px; box-shadow: 0 -6px 0 0 var(--frame); }
+    .visual-section .figure-toolbar { margin-top: 6px; }
+    #visual { max-height: none; }
+  }
 </style>
 </head>
 <body>
@@ -645,6 +655,12 @@ const syncTheme = () => { themeBtn.textContent = isDark() ? 'โหมดสว�
 themeBtn.addEventListener('click', () => { document.documentElement.dataset.theme = isDark() ? 'light' : 'dark'; syncTheme(); });
 darkMQ.addEventListener('change', syncTheme);
 syncTheme();
+
+// มือถือ: ตัดขอบว่างซ้าย–ขวาของ SVG ออกเล็กน้อย กราฟจึงขยายใหญ่ขึ้นในพื้นที่เท่าเดิม
+const visualSvg = $('visual'), phoneMQ = window.matchMedia('(max-width: 640px)');
+const syncViewBox = () => visualSvg.setAttribute('viewBox', phoneMQ.matches ? '28 0 704 433' : '0 0 760 433');
+phoneMQ.addEventListener('change', syncViewBox);
+syncViewBox();
 
 makeParticles();
 speedInput.value=String(committedSpeed);
