@@ -157,6 +157,49 @@
     #regions text { font-size: 14px; }
     .metric strong { font-size: 18px; }
   }
+
+  .eq-box { margin-top: 12px; padding: 12px 14px; background: var(--info-bg); border: 1px solid var(--info-border); border-radius: 12px; font-size: 13.5px; line-height: 1.7; color: var(--ink); }
+  :root { --math: "Cambria Math", Cambria, "STIX Two Math", "Latin Modern Math", "Times New Roman", serif; }
+  .math, #rulerText { font-family: var(--math); }
+  .eq-box code { display: block; margin: 4px 0; font-family: var(--math); font-size: 15px; color: var(--ink2); }
+  .eq-box .eq-res { display: block; color: var(--info-fg); font-size: 13px; }
+  .m-formula { display: block; margin-top: 8px; font-family: var(--math); font-size: 14px; line-height: 1.5; color: #0055a4; word-break: break-word; }
+  .m-sub { display: block; margin-top: 4px; font-size: 12px; line-height: 1.5; color: #535456; }
+  .metric:last-child { grid-column: 1 / -1; }
+  .controls .eq-box { margin-top: 10px; background: var(--info-bg); border-radius: 10px; }
+
+  /* จอกว้าง: แถวบน = ปรับเสียง (ซ้าย) + กราฟ (ขวา), แถวล่าง = สรุปค่า/สูตร ยาวเต็มความกว้างเรียงลงมา */
+  @media (min-width: 900px) {
+    :root { --pad: 24px; }
+    .container { max-width: 1160px; }
+    .layout { grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); align-items: stretch; }
+    .hero { grid-column: 1 / -1; }
+    .col-main { display: flex; flex-direction: column; gap: 14px; min-width: 0; grid-column: 2; grid-row: 2; }
+    .col-side { display: contents; }
+    .controls { grid-column: 1; grid-row: 2; }
+    .info { grid-column: 1 / -1; }
+    .metrics { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+    .metric { grid-column: span 2; }
+    .metric:nth-child(n+4) { grid-column: span 3; }
+    .visual-section { position: static; box-shadow: none; flex: 1; display: flex; flex-direction: column; }
+    .visual-section .figure-card { flex: 1; display: flex; align-items: center; }
+    #visual { max-height: none; }
+    /* ปรับเสียง: กะทัดรัด สูงเท่ากราฟ */
+    .controls { display: flex; flex-direction: column; justify-content: space-between; gap: 14px; padding: 14px 16px; }
+    .controls .card-title { font-size: 16px; margin-bottom: 8px; }
+    .controls .control-group { margin-bottom: 0; }
+    .controls .control-header { margin-bottom: 4px; }
+    .controls .control-header label { font-size: 15px; }
+    .controls .control-header strong { font-size: 14px; padding: 1px 10px; }
+    .controls input[type=number] { min-height: 40px; font-size: 16px; padding: 6px 10px; }
+    .controls button.step { flex: 0 0 40px; min-height: 40px; font-size: 20px; }
+    .controls input[type=range] { height: 28px; margin-top: 2px; }
+    .controls .range-label { font-size: 12px; margin-top: 0; }
+    .controls .input-hint { margin-top: 4px; font-size: 12px; line-height: 1.4; min-height: 0; }
+    .controls .eq-box { margin-top: 8px; padding: 8px 10px; font-size: 12.5px; line-height: 1.5; }
+    .controls .eq-box code { font-size: 14px; margin: 2px 0; }
+    .controls .eq-box .eq-res { font-size: 12px; }
+  }
 </style>
 </head>
 <body>
@@ -239,13 +282,12 @@
         </div>
       </section>
       <div id="rangeWarn" class="note warn" role="status" hidden></div>
-      <div class="formula"><strong>ความสัมพันธ์สำคัญ</strong>v = fλ &nbsp;•&nbsp; T = 1/f &nbsp;•&nbsp; λ = v/f<br>คาบปัจจุบัน T = <span id="periodValue">2.27</span> ms<br>v ขึ้นกับตัวกลางและอุณหภูมิ ไม่ขึ้นกับ f หรือ A เมื่อเปลี่ยน f ค่า v คงเดิม λ จึงเปลี่ยนแทน</div>
     </div>
     <div class="col-side">
       <section class="card controls" aria-label="ปรับค่าคลื่นเสียง">
         <h2 class="card-title">ปรับเสียง</h2>
         <div class="control-group">
-          <div class="control-header"><label for="frequency">ความถี่ f (เสียงสูง–ต่ำ)</label><strong>Hz</strong></div>
+          <div class="control-header"><label for="frequency">ความถี่ <span class="math">(f)</span></label><strong>Hz</strong></div>
           <div class="num-row">
             <button type="button" class="step" data-target="frequency" data-step="-10" aria-label="ลดความถี่ 10 Hz">−</button>
             <input id="frequency" type="number" inputmode="numeric" min="100" max="1200" step="1" value="440" aria-describedby="frequencyHint">
@@ -254,36 +296,39 @@
           <small id="frequencyHint" class="input-hint" aria-live="polite"></small>
         </div>
         <div class="control-group">
-          <div class="control-header"><label for="amplitude">แอมพลิจูด A</label><strong><span id="amplitudeValue">60</span> / 100</strong></div>
+          <div class="control-header"><label for="amplitude">แอมพลิจูด <span class="math">(A)</span></label><strong><span id="amplitudeValue">60</span> / 100</strong></div>
           <input id="amplitude" type="range" min="0" max="100" step="1" value="60" aria-label="แอมพลิจูด 0 ถึง 100">
           <div class="range-label"><span>0 (ไม่มีเสียง)</span><span>100 (ดังสุด)</span></div>
         </div>
 
         <div class="control-group" id="airSettings">
-          <div class="control-header"><label for="temperature">อุณหภูมิอากาศ</label><strong>°C</strong></div>
+          <div class="control-header"><label for="temperature">อุณหภูมิอากาศ <span class="math">(t)</span></label><strong>°C</strong></div>
           <div class="num-row">
             <button type="button" class="step" data-target="temperature" data-step="-1" aria-label="ลดอุณหภูมิ 1 องศา">−</button>
-            <input id="temperature" type="number" inputmode="numeric" min="-50" max="50" step="1" value="20" aria-describedby="temperatureHint">
+            <input id="temperature" type="number" inputmode="decimal" min="-50" max="50" step="0.1" value="20" aria-describedby="temperatureHint">
             <button type="button" class="step" data-target="temperature" data-step="1" aria-label="เพิ่มอุณหภูมิ 1 องศา">+</button>
           </div>
           <small id="temperatureHint" class="input-hint" aria-live="polite">กรอกค่า −50 ถึง 50 °C</small>
         </div>
         <div class="control-group">
-          <div class="control-header"><label for="speed">อัตราเร็วเสียง v</label><strong>m/s</strong></div>
+          <div class="control-header"><label for="speed">อัตราเร็วเสียง <span class="math">(v)</span></label><strong>m/s</strong></div>
           <div class="num-row">
             <button type="button" class="step" data-target="speed" data-step="-10" aria-label="ลดอัตราเร็ว 10 m/s">−</button>
-            <input id="speed" type="number" inputmode="decimal" min="1" max="10000" step="0.1" value="343.2" aria-describedby="speedHint">
+            <input id="speed" type="number" inputmode="decimal" min="301.3" max="361.3" step="0.01" value="343.3" aria-describedby="speedHint">
             <button type="button" class="step" data-target="speed" data-step="10" aria-label="เพิ่มอัตราเร็ว 10 m/s">+</button>
           </div>
           <small id="speedHint" class="input-hint" aria-live="polite"></small>
+          <div class="eq-box"><b>สมการความสัมพันธ์ทางฟิสิกส์:</b><code>v = 331.3 + 0.6t</code><span class="eq-res" id="eqResult"></span></div>
         </div>
       </section>
-      <section class="info" aria-label="ข้อมูลคลื่นเสียง">
+      <section class="card info" aria-label="ข้อมูลคลื่นเสียง">
+      <h2 class="card-title">สรุปค่าทางฟิสิกส์ของคลื่นเสียง ณ ขณะนี้</h2>
       <div class="metrics">
-        <div class="metric"><small>ระดับเสียง (สูง–ต่ำ)</small><strong id="pitchCard">ปานกลาง</strong></div>
-        <div class="metric"><small>ความดัง</small><strong id="loudCard">ปานกลาง</strong></div>
-        <div class="metric"><small>อัตราเร็วเสียง v</small><strong id="speedCard">343.2 m/s</strong></div>
-        <div class="metric"><small>ความยาวคลื่น λ</small><strong id="lambdaCard">0.780 m</strong></div>
+        <div class="metric"><small>อัตราเร็วเสียงในอากาศ <span class="math">(v)</span></small><strong id="speedCard">343.2 m/s</strong><span class="m-formula" id="speedFormula"></span><span class="m-sub" id="speedSub"></span></div>
+        <div class="metric"><small>ความยาวคลื่น <span class="math">(λ = v / f)</span></small><strong id="lambdaCard">0.780 m</strong><span class="m-formula" id="lambdaFormula"></span><span class="m-sub">ระยะห่างระหว่างส่วนอัดที่ติดกัน</span></div>
+        <div class="metric"><small>คาบการสั่น <span class="math">(T = 1 / f)</span></small><strong id="periodCard">2.27 ms</strong><span class="m-formula" id="periodFormula"></span><span class="m-sub">เวลาที่โมเลกุลสั่นครบ 1 รอบ</span></div>
+        <div class="metric"><small>ระดับเสียง (สูง–ต่ำ)</small><strong id="pitchCard">ปานกลาง</strong><span class="m-formula" id="pitchFormula"></span><span class="m-sub">ความถี่สูง → เสียงแหลม ความถี่ต่ำ → เสียงทุ้ม</span></div>
+        <div class="metric"><small>ความดัง</small><strong id="loudCard">ปานกลาง</strong><span class="m-formula" id="loudFormula"></span><span class="m-sub">แอมพลิจูดมาก → เสียงดัง</span></div>
       </div>
       <div class="explain" id="explain" aria-live="polite"></div>
     </section>
@@ -330,8 +375,8 @@ let paused = false;
 let lastTime = performance.now();
 const dots = [];
 
-// แบบจำลองอากาศอุดมคติ: ความเร็วเสียงแปรตามรากที่สองของอุณหภูมิสัมบูรณ์
-function airSpeedAt(t) { return Math.round(331.3 * Math.sqrt((273.15 + t) / 273.15) * 10) / 10; }
+// ความสัมพันธ์โดยประมาณของอัตราเร็วเสียงในอากาศกับอุณหภูมิ: v = 331.3 + 0.6t (v: m/s, t: °C)
+function airSpeedAt(t) { return Math.round((331.3 + 0.6 * t) * 100) / 100; }
 function numberText(n, digits = 1) { return Number(n.toFixed(digits)).toLocaleString('en-US', {maximumFractionDigits: digits}); }
 function pitchText(f) { return f < 300 ? 'ต่ำ' : f < 700 ? 'ปานกลาง' : 'สูง'; }
 function loudText(a) { return a === 0 ? 'ไม่มีการสั่น' : a < 35 ? 'เบา' : a < 75 ? 'ปานกลาง' : 'ดัง'; }
@@ -389,16 +434,24 @@ function updateInfo() {
   $('loudCard').textContent = loudText(a);
   const arcCount = a === 0 ? 0 : a < 35 ? 1 : a < 75 ? 2 : 3;
   [1, 2, 3].forEach(n => $('soundArc' + n).setAttribute('visibility', n <= arcCount ? 'visible' : 'hidden'));
-  $('speedCard').textContent = `${numberText(s.v, 1)} m/s`;
+  $('speedCard').textContent = `${numberText(s.v, 2)} m/s`;
   $('lambdaCard').textContent = `${formattedLambda} m`;
-  $('periodValue').textContent = (1000 / s.f).toFixed(2);
+  const tNow = committedTemp, airV = airSpeedAt(tNow), periodMs = (1000 / s.f).toFixed(2);
+  $('speedFormula').textContent = speedOverridden ? 'v = ค่าที่กรอกเอง' : `v = 331.3 + 0.6 × ${tNow < 0 ? '(' + tNow + ')' : tNow} ${Math.abs(airV - s.v) < 0.005 ? '=' : '≈'} ${numberText(s.v, 2)}`;
+  $('speedSub').textContent = speedOverridden ? `ไม่ได้คำนวณจากอุณหภูมิ (อากาศ ${tNow} °C ให้ ${numberText(airV, 2)} m/s)` : `ขึ้นกับอุณหภูมิอากาศ (${tNow} °C)`;
+  $('lambdaFormula').textContent = `λ = ${numberText(s.v, 2)} / ${s.f} = ${formattedLambda} m`;
+  $('periodCard').textContent = `${periodMs} ms`;
+  $('periodFormula').textContent = `T = 1 / ${s.f} = ${periodMs} ms`;
+  $('pitchFormula').textContent = `f = ${s.f} Hz`;
+  $('loudFormula').textContent = `A = ${a} / 100`;
+  $('eqResult').textContent = speedOverridden ? `ค่า v ที่กรอกเอง = ${numberText(s.v, 2)} m/s • อากาศที่ ${tNow} °C ให้ ${numberText(airV, 2)} m/s` : `ปรับอุณหภูมิเป็น ${tNow} °C → คำนวณอัตราเร็วได้ ${numberText(s.v, 2)} m/s`;
   const warn = $('rangeWarn');
   const tooLong = s.wavelength > VIEW.meters;
   warn.hidden = !tooLong;
   if (tooLong) warn.textContent = `ความยาวคลื่น ${formattedLambda} m ยาวกว่าช่วงที่แสดง (${VIEW.meters} m) จึงเห็นเพียงบางส่วนของคลื่น ลองเพิ่มความถี่เพื่อให้เห็นครบอย่างน้อยหนึ่งช่วงคลื่น`;
   const speedDetails = speedOverridden ? 'ค่าที่กรอกเอง ไม่ได้คำนวณจากอุณหภูมิ อาจเป็นตัวกลางอื่นที่ไม่ใช่อากาศ' : `ค่าประมาณสำหรับอากาศที่ ${committedTemp} °C`;
   $('explain').innerHTML = `ความถี่ <strong>${s.f} Hz</strong> ให้เสียงระดับ <strong>${pitchText(s.f)}</strong> ${a === 0 ? 'แต่แอมพลิจูดเป็น <strong>0</strong> จึง<strong>ไม่มีการสั่นและไม่มีเสียง</strong>' : `และแอมพลิจูด <strong>${a}/100</strong> คือการสั่นไป–กลับของโมเลกุลอากาศรอบตำแหน่งสมดุล`}<br>` +
-    `อัตราเร็วเสียง <strong>${numberText(s.v,1)} m/s</strong> (${speedDetails}) จึงมีความยาวคลื่น <strong>${formattedLambda} m</strong>`;
+    `อัตราเร็วเสียง <strong>${numberText(s.v,2)} m/s</strong> (${speedDetails}) จึงมีความยาวคลื่น <strong>${formattedLambda} m</strong>`;
 }
 
 function createTicks() {
@@ -517,7 +570,7 @@ function wireNumeric(el, config) {
     el.classList.toggle('invalid', !ok);
     el.setAttribute('aria-invalid', String(!ok));
     hint.classList.toggle('error', !ok);
-    hint.textContent = ok ? config.description() : `กรุณากรอก${config.integer ? 'จำนวนเต็ม' : 'ตัวเลข'}ระหว่าง ${config.min} ถึง ${numberText(config.max,0)} ${config.unit}`;
+    hint.textContent = ok ? config.description() : `กรุณากรอก${config.integer ? 'จำนวนเต็ม' : 'ตัวเลข'}ระหว่าง ${config.min} ถึง ${numberText(config.max, config.integer ? 0 : 2)} ${config.unit}`;
   };
   el.addEventListener('input', () => {
     const ok = valid(el.value); show(ok);
@@ -541,17 +594,18 @@ const showFrequency = wireNumeric(frequency, {
   current:()=>committedF,
   commit:n=>{committedF=n;}
 });
+function tempFromSpeed(v) { return Math.min(50, Math.max(-50, Math.round((v - 331.3) / 0.6 * 10) / 10)); }
 const showTemp = wireNumeric(temperature, {
-  min:-50,max:50,integer:true,hint:'temperatureHint',unit:'°C',
+  min:-50,max:50,integer:false,hint:'temperatureHint',unit:'°C',
   description:()=> 'กรอกค่า −50 ถึง 50 °C',
   current:()=>committedTemp,
-  commit:n=>{committedTemp=n; committedSpeed=airSpeedAt(n); speedOverridden=false; speedInput.value=String(committedSpeed); showSpeed();}
+  commit:n=>{n=Math.round(n*10)/10; committedTemp=n; committedSpeed=airSpeedAt(n); speedOverridden=false; speedInput.value=String(committedSpeed); showSpeed();}
 });
 const showSpeed = wireNumeric(speedInput, {
-  min:1,max:10000,integer:false,hint:'speedHint',unit:'m/s',
-  description:()=>speedOverridden ? 'พิมพ์อัตราเร็วเอง 1–10,000 m/s • ปรับอุณหภูมิเพื่อคำนวณค่าของอากาศใหม่' : 'คำนวณจากอุณหภูมิอากาศ (20 °C ≈ 343 m/s) หรือพิมพ์ค่าเองได้',
+  min:301.3,max:361.3,integer:false,hint:'speedHint',unit:'m/s',
+  description:()=>'',
   current:()=>committedSpeed,
-  commit:n=>{committedSpeed=n; speedOverridden=true;}
+  commit:n=>{n=Math.round(n*100)/100; committedSpeed=n; speedOverridden=false; committedTemp=tempFromSpeed(n); temperature.value=String(committedTemp); showTemp();}
 });
 
 amplitude.addEventListener('input',()=>{updateInfo();render();});
@@ -575,7 +629,7 @@ const pushValue = (el, v) => { el.value = String(v); el.dispatchEvent(new Event(
 document.querySelectorAll('button.step').forEach(b => b.addEventListener('click', () => {
   const el = $(b.dataset.target);
   const v = (Number(el.value) || 0) + Number(b.dataset.step);
-  pushValue(el, Math.round(Math.min(Number(el.max), Math.max(Number(el.min), v)) * 10) / 10);
+  pushValue(el, Math.round(Math.min(Number(el.max), Math.max(Number(el.min), v)) * 100) / 100);
 }));
 // ล้อเมาส์ไม่เปลี่ยนค่าในช่องตัวเลข: ถ้าช่องกำลังถูกโฟกัสอยู่ให้ปล่อยโฟกัส เบราว์เซอร์จึงเลื่อนหน้าแทน
 [frequency, temperature, speedInput].forEach(el =>
