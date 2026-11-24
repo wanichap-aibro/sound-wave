@@ -149,12 +149,7 @@
     .visual-controls label { display: none; }
     .visual-controls select { min-height: 40px; font-size: 14px; }
     button { padding: 8px 12px; min-height: 40px; font-size: 14px; }
-    #graphTicks text, #particleTicks { font-size: 16px; }
-    #graphAxisTitle { font-size: 14px; }
-    #graphModeLabel, #visual text[y="254"][text-anchor="end"] { display: none; }
-    #ampTopText, #ampBotText, #visual text[x="119"] { font-size: 14px; }
-    #rulerText, #visual text[x="52"], #visual text[x="57"] { font-size: 15px; }
-    #regions text { font-size: 14px; }
+    #graphModeLabel, #molHint { display: none; }
     .metric strong { font-size: 18px; }
   }
 
@@ -166,6 +161,7 @@
   .m-formula { display: block; margin-top: 8px; font-family: var(--math); font-size: 14px; line-height: 1.5; color: #0055a4; word-break: break-word; }
   .m-sub { display: block; margin-top: 4px; font-size: 12px; line-height: 1.5; color: #535456; }
   .metric:last-child { grid-column: 1 / -1; }
+  .metric small .math { white-space: nowrap; }
   .controls .eq-box { margin-top: 10px; background: var(--info-bg); border-radius: 10px; }
 
   /* จอกว้าง: แถวบน = ปรับเสียง (ซ้าย) + กราฟ (ขวา), แถวล่าง = สรุปค่า/สูตร ยาวเต็มความกว้างเรียงลงมา */
@@ -231,16 +227,16 @@
       <svg id="visual" viewBox="0 0 760 433" role="img" aria-label="กราฟการกระจัดด้านบนและโมเลกุลอากาศสั่นตามยาวด้านล่าง">
         <!-- กราฟการกระจัด -->
         <rect id="plotPanel" x="35" y="7" width="690" height="214" rx="14" fill="#fdead6" stroke="#e5e5e6"/>
-        <defs><pattern id="gridPat" x="130" y="0" width="71.25" height="28" patternUnits="userSpaceOnUse"><path d="M0 0H71.25M0 0V28" fill="none" stroke="#babcbd" stroke-width="1" opacity="0.7"/></pattern></defs>
-        <rect x="130" y="47" width="570" height="137" fill="url(#gridPat)"/>
+        <defs><pattern id="gridPat" x="130" y="0" width="71.25" height="28" patternUnits="userSpaceOnUse"><path id="gridPatPath" d="M0 0H71.25M0 0V28" fill="none" stroke="#babcbd" stroke-width="1" opacity="0.7"/></pattern></defs>
+        <rect id="gridRect" x="130" y="47" width="570" height="137" fill="url(#gridPat)"/>
         <text id="graphModeLabel" x="700" y="29" text-anchor="end" font-size="11" fill="#68696b">ระยะทางที่แสดง 2.2 m</text>
-        <line x1="130" y1="112" x2="700" y2="112" stroke="#d0d1d2" stroke-width="1.5" stroke-dasharray="4 4"/>
-        <line x1="130" y1="47" x2="130" y2="183" stroke="#a6a7aa" stroke-width="1.5"/>
-        <line x1="130" y1="184" x2="700" y2="184" stroke="#a6a7aa" stroke-width="1.5"/>
-        <text x="119" y="59" font-size="11" text-anchor="end" fill="#68696b">+ (ขวา)</text>
-        <text x="119" y="116" font-size="11" text-anchor="end" fill="#68696b">0</text>
-        <text x="119" y="170" font-size="11" text-anchor="end" fill="#68696b">− (ซ้าย)</text>
-        <text x="52" y="112" transform="rotate(-90 52 112)" text-anchor="middle" font-size="12" font-weight="bold" fill="#535456">การกระจัด</text>
+        <line id="zeroLine" x1="130" y1="112" x2="700" y2="112" stroke="#d0d1d2" stroke-width="1.5" stroke-dasharray="4 4"/>
+        <line id="axisV" x1="130" y1="47" x2="130" y2="183" stroke="#a6a7aa" stroke-width="1.5"/>
+        <line id="axisH" x1="130" y1="184" x2="700" y2="184" stroke="#a6a7aa" stroke-width="1.5"/>
+        <text id="lblPlus" x="119" y="59" font-size="11" text-anchor="end" fill="#68696b">+ (ขวา)</text>
+        <text id="lblZero" x="119" y="116" font-size="11" text-anchor="end" fill="#68696b">0</text>
+        <text id="lblMinus" x="119" y="170" font-size="11" text-anchor="end" fill="#68696b">− (ซ้าย)</text>
+        <text id="yTitle" x="52" y="112" transform="rotate(-90 52 112)" text-anchor="middle" font-size="12" font-weight="bold" fill="#535456">การกระจัด</text>
         <line id="ampTopLine" x1="130" x2="700" y1="56" y2="56" stroke="#2e97ff" stroke-width="1" stroke-dasharray="2 4" opacity="0.5"/>
         <line id="ampBotLine" x1="130" x2="700" y1="168" y2="168" stroke="#2e97ff" stroke-width="1" stroke-dasharray="2 4" opacity="0.5"/>
         <text id="ampTopText" x="705" y="60" font-size="11" font-weight="bold" fill="#0055a4">+A</text>
@@ -256,8 +252,8 @@
         <text id="graphAxisTitle" x="415" y="213" font-size="11.5" text-anchor="middle" font-weight="bold" fill="#535456">การกระจัด</text>
         <!-- กราฟโมเลกุล -->
         <rect id="molPanel" x="35" y="229" width="690" height="190" rx="14" fill="#fff" stroke="#e5e5e6"/>
-        <text x="57" y="254" font-size="13" font-weight="bold" fill="#535456">โมเลกุลอากาศ</text>
-        <text x="700" y="254" text-anchor="end" font-size="11" fill="#68696b">สั่นไป–กลับรอบตำแหน่งสมดุล</text>
+        <text id="molTitle" x="57" y="254" font-size="13" font-weight="bold" fill="#535456">โมเลกุลอากาศ</text>
+        <text id="molHint" x="700" y="254" text-anchor="end" font-size="11" fill="#68696b">สั่นไป–กลับรอบตำแหน่งสมดุล</text>
         <g id="speaker" transform="translate(33,288) scale(0.5)">
           <defs><linearGradient id="spkFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fdead6"/><stop offset="1" stop-color="#fdead6"/></linearGradient></defs>
           <rect x="30" y="50" width="36" height="60" rx="7" fill="url(#spkFill)" stroke="#f5891f" stroke-width="5"/>
@@ -374,7 +370,23 @@ const regionEls = [];
 })();
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const TAU = 2 * Math.PI;
-const VIEW = Object.freeze({left: 130, right: 700, meters: 2.2, refX: 440, midY: 112, maxWaveHeight: 56, moleculeY: 326});
+// เลย์เอาต์ของกราฟ: จอกว้างใช้ภาพ 760 หน่วย, มือถือใช้ภาพแคบ 360 หน่วย (ตัวอักษรจึงไม่ถูกย่อจนเล็ก)
+function makeLayout(p) {
+  const plotTop = p.midY - p.amp - 9, axisY = p.midY + p.amp + 16, topBottom = axisY + 37;
+  const molY = topBottom + 8, pTop = molY + 48, ticksY = pTop + p.pH + 29, molBottom = ticksY + 13;
+  return Object.assign({}, p, {
+    meters: 2.2, maxWaveHeight: p.amp, plotTop, axisY, topBottom, molY, pTop, ticksY, molBottom,
+    panelH: topBottom - p.panelY, molH: molBottom - molY, H: molBottom + p.bottomPad,
+    molTitleX: p.molTitleX ?? p.panelX + 22,
+    refX: p.left + (p.right - p.left) * 310 / 570, refMolY: pTop + p.pH / 2,
+    shiftMax: 20 * (p.right - p.left) / 570
+  });
+}
+const LAYOUTS = {
+  desktop: makeLayout({W:760, panelX:35, panelW:690, panelY:7, left:130, right:700, midY:112, amp:56, pH:100, bottomPad:14, yTitleX:52, yLblX:119, spk:{tx:33, ty:288, s:0.5}}),
+  phone:   makeLayout({W:368, panelX:4,  panelW:360, panelY:4, left:80,  right:330, midY:83,  amp:38, pH:60,  bottomPad:4,  yTitleX:22, yLblX:72,  molTitleX:30, spk:{tx:5.5, ty:232, s:0.35}})
+};
+let VIEW = LAYOUTS.desktop;
 const defaults = Object.freeze({frequency: 440, amplitude: 60, temp: 20});
 let committedF = defaults.frequency;
 let committedTemp = defaults.temp;
@@ -401,12 +413,12 @@ function makeParticles() {
   const rand = seededRandom(29041);
   const fragment = document.createDocumentFragment();
   const taken = [];
-  const desired = 440;
+  const desired = Math.max(100, Math.round(440 * ((VIEW.right - VIEW.left - 12) * VIEW.pH) / (558 * 100)));
   let attempts = 0;
   while (dots.length < desired && attempts < desired * 120) {
     attempts++;
     const x = VIEW.left + 6 + (VIEW.right - VIEW.left - 12) * rand();
-    const y = 277 + 100 * rand();
+    const y = VIEW.pTop + VIEW.pH * rand();
     if (taken.some(p => (x-p.x)**2 + (y-p.y)**2 < 6**2)) continue;
     const el = document.createElementNS(SVG_NS, 'circle');
     el.setAttribute('cx', x.toFixed(2));
@@ -427,7 +439,7 @@ function getState() {
   const kPx = TAU * VIEW.meters / (wavelength * (VIEW.right - VIEW.left));
   return { f:committedF, amp, v:committedSpeed, wavelength, kPx,
     waveHeight: amp * VIEW.maxWaveHeight,
-    moleculeShift: amp * Math.min(20, 0.66 / kPx)
+    moleculeShift: amp * Math.min(VIEW.shiftMax, 0.66 / kPx)
   };
 }
 function thetaAt(x, state) { return state.kPx * (x - VIEW.left) - phase; }
@@ -474,11 +486,11 @@ function createTicks() {
   for (let i=0; i<=4; i++) {
     const x = (VIEW.left + (VIEW.right - VIEW.left) * i / 4).toFixed(2);
     const posLabel = numberText(VIEW.meters * i / 4, 2) + (i === 4 ? ' m' : '');
-    const ptxt = mk('text', {x, y:'406'});
+    const ptxt = mk('text', {x, y:String(VIEW.ticksY)});
     ptxt.textContent = posLabel;
     bottom.appendChild(ptxt);
-    top.appendChild(mk('line', {x1:x, x2:x, y1:'184', y2:'189', stroke:'#a6a7aa', 'stroke-width':'1.5'}));
-    const ttxt = mk('text', {x, y:'201', 'font-size':'10', 'text-anchor':'middle', fill:'#68696b'});
+    top.appendChild(mk('line', {x1:x, x2:x, y1:String(VIEW.axisY), y2:String(VIEW.axisY + 5), stroke:'#a6a7aa', 'stroke-width':'1.5'}));
+    const ttxt = mk('text', {x, y:String(VIEW.axisY + 17), 'font-size':'10', 'text-anchor':'middle', fill:'#68696b'});
     ttxt.textContent = timeAxis ? numberText(2000 / s.f * i / 4, 2) + (i === 4 ? ' ms' : '') : posLabel;
     top.appendChild(ttxt);
   }
@@ -532,7 +544,7 @@ function drawParticles(s) {
   refParticle.setAttribute('cx', refX.toFixed(2));
   refParticleHalo.setAttribute('cx', refX.toFixed(2));
   const coneShift = -s.moleculeShift * Math.sin(phase) * 0.55;
-  const dx = coneShift / 0.5;
+  const dx = coneShift / VIEW.spk.s;
   $('speakerCone').setAttribute('transform', `translate(${dx.toFixed(2)},0)`);
   $('speakerBody').setAttribute('d', `M66 62 L${(108 + dx).toFixed(2)} 36 V124 L66 98 Z`);
   // เส้นคลื่นเสียงกะพริบตามเฟส: เส้นในสว่างสุดตอนกรวยดันอากาศแรงสุด (ส่วนอัด) แล้วไล่ออกไปเส้นนอก
@@ -656,11 +668,41 @@ themeBtn.addEventListener('click', () => { document.documentElement.dataset.them
 darkMQ.addEventListener('change', syncTheme);
 syncTheme();
 
-// มือถือ: ตัดขอบว่างซ้าย–ขวาของ SVG ออกเล็กน้อย กราฟจึงขยายใหญ่ขึ้นในพื้นที่เท่าเดิม
+// ใช้เลย์เอาต์ตามขนาดจอ: จอแคบ (≤640px) ใช้ภาพกราฟแคบแบบมือถือ
 const visualSvg = $('visual'), phoneMQ = window.matchMedia('(max-width: 640px)');
-const syncViewBox = () => visualSvg.setAttribute('viewBox', phoneMQ.matches ? '28 0 704 433' : '0 0 760 433');
-phoneMQ.addEventListener('change', syncViewBox);
-syncViewBox();
+function applyLayout() {
+  const L = phoneMQ.matches ? LAYOUTS.phone : LAYOUTS.desktop;
+  VIEW = L;
+  const set = (id, attrs) => { const e = $(id); for (const k in attrs) e.setAttribute(k, attrs[k]); };
+  visualSvg.setAttribute('viewBox', `0 0 ${L.W} ${L.H}`);
+  set('plotPanel', {x:L.panelX, y:L.panelY, width:L.panelW, height:L.panelH});
+  const cw = (L.right - L.left) / 8;
+  set('gridPat', {x:L.left, width:cw});
+  set('gridPatPath', {d:`M0 0H${cw}M0 0V28`});
+  set('gridRect', {x:L.left, y:L.plotTop, width:L.right - L.left, height:L.axisY - L.plotTop});
+  set('zeroLine', {x1:L.left, x2:L.right, y1:L.midY, y2:L.midY});
+  set('axisV', {x1:L.left, x2:L.left, y1:L.plotTop, y2:L.axisY - 1});
+  set('axisH', {x1:L.left, x2:L.right, y1:L.axisY, y2:L.axisY});
+  set('lblPlus', {x:L.yLblX, y:L.midY - L.amp + 3});
+  set('lblZero', {x:L.yLblX, y:L.midY + 4});
+  set('lblMinus', {x:L.yLblX, y:L.midY + L.amp + 2});
+  set('yTitle', {x:L.yTitleX, y:L.midY, transform:`rotate(-90 ${L.yTitleX} ${L.midY})`});
+  set('graphModeLabel', {x:L.right, y:L.plotTop - 18});
+  set('ampTopLine', {x1:L.left, x2:L.right}); set('ampBotLine', {x1:L.left, x2:L.right});
+  set('ampTopText', {x:L.right + 5}); set('ampBotText', {x:L.right + 5});
+  set('rulerLine', {y1:L.plotTop - 5, y2:L.plotTop - 5});
+  set('rulerL', {y1:L.plotTop - 10, y2:L.plotTop}); set('rulerR', {y1:L.plotTop - 10, y2:L.plotTop});
+  set('rulerText', {y:L.plotTop - 12});
+  set('graphAxisTitle', {x:(L.left + L.right) / 2, y:L.axisY + 29});
+  set('molPanel', {x:L.panelX, y:L.molY, width:L.panelW, height:L.molH});
+  set('molTitle', {x:L.molTitleX, y:L.molY + 25});
+  set('molHint', {x:L.right, y:L.molY + 25});
+  set('speaker', {transform:`translate(${L.spk.tx},${L.spk.ty}) scale(${L.spk.s})`});
+  set('particleReference', {cy:L.refMolY}); set('particleReferenceHalo', {cy:L.refMolY});
+  regionEls.forEach(t => t.setAttribute('y', L.molY + 42));
+}
+phoneMQ.addEventListener('change', () => { applyLayout(); makeParticles(); createTicks(); render(); });
+applyLayout();
 
 makeParticles();
 speedInput.value=String(committedSpeed);
